@@ -4,57 +4,115 @@ OpenClaw skill for generating images from text prompts using AI models.
 
 ## Providers
 
-| Provider | Type | Models | Env Variable |
-|----------|------|--------|-------------|
+| Provider | Type | Models | Required key |
+|----------|------|--------|--------------|
 | **OpenRouter** (default) | Synchronous | `openai/gpt-image-1`, `google/imagen-4`, `stabilityai/stable-diffusion-3` | `OPENROUTER_API_KEY` |
 | **Kie.ai** | Async (task-based) | `flux-ai`, `midjourney`, `google-4o-image`, `ghibli-ai` | `KIE_API_KEY` |
 
+---
+
 ## Installation
 
+### Option A — via ClawHub (recommended)
+
 ```bash
-# Clone
+clawhub install smtools-image-generation
+```
+
+That's it. OpenClaw will pick up the skill automatically.
+
+### Option B — manually from GitHub
+
+**Step 1.** Clone the repository:
+
+```bash
 git clone https://github.com/bzSega/SMTools-ImageGenerationSkill.git
+```
 
-# Copy to OpenClaw skills directory
+**Step 2.** Copy it to the OpenClaw skills directory:
+
+```bash
 cp -r SMTools-ImageGenerationSkill ~/.openclaw/skills/smtools-image-generation
+```
 
-# Setup
+**Step 3.** Run the setup script (installs Python dependencies and creates `config.json`):
+
+```bash
 cd ~/.openclaw/skills/smtools-image-generation
 bash setup.sh
 ```
 
-Edit `.env` and add your API key(s):
+---
+
+## API Keys
+
+The skill needs at least one API key to work.
+
+### OpenRouter (default provider)
+
+1. Create an account at [openrouter.ai](https://openrouter.ai)
+2. Go to **Keys** → **Create key**
+3. Copy the key and set it in your environment:
+
 ```bash
-OPENROUTER_API_KEY=your_key_here
-# KIE_API_KEY=your_key_here  # optional
+# Add to ~/.zshrc or ~/.bashrc so it persists across sessions
+export OPENROUTER_API_KEY="sk-or-..."
 ```
+
+Or put it in the `.env` file inside the skill directory:
+
+```
+~/.openclaw/skills/smtools-image-generation/.env
+```
+
+```env
+OPENROUTER_API_KEY=sk-or-...
+```
+
+### Kie.ai (optional, for Midjourney / Flux / Ghibli models)
+
+1. Create an account at [kie.ai](https://kie.ai)
+2. Go to **API** → **Generate key**
+3. Add it alongside the OpenRouter key:
+
+```env
+OPENROUTER_API_KEY=sk-or-...   # main provider
+KIE_API_KEY=kie-...            # optional, for Kie models
+```
+
+> **Tip:** If both keys are set, OpenRouter is used by default. To switch providers, either ask explicitly ("generate with Kie.ai") or change `default_provider` in `config.json`.
+
+---
 
 ## Usage
 
-The skill activates automatically in OpenClaw when you ask to generate an image.
+Once installed, the skill activates automatically in OpenClaw when you ask to generate an image:
+
+> *"Draw a cat in space"*
+> *"Generate a cyberpunk cityscape, 4k"*
+> *"Create a Studio Ghibli style forest with Kie.ai"*
 
 ### Manual CLI usage
 
 ```bash
-# Generate with default provider (OpenRouter)
+# Default: OpenRouter + gpt-image-1
 python3 scripts/generate.py -p "A cat in space"
 
-# Use a specific model
+# Choose a specific model
 python3 scripts/generate.py -p "Cyberpunk cityscape" -m "google/imagen-4"
 
 # Use Kie.ai provider
 python3 scripts/generate.py -p "Studio Ghibli forest" --provider kie -m ghibli-ai
 
-# Custom output path
+# Save to a custom path
 python3 scripts/generate.py -p "A red fox" -o /tmp/fox.png
 
-# List available models
+# List available models for a provider
 python3 scripts/generate.py --provider openrouter --list-models
 ```
 
 ### Output
 
-JSON to stdout:
 ```json
 {
   "status": "ok",
@@ -64,9 +122,11 @@ JSON to stdout:
 }
 ```
 
+---
+
 ## Configuration
 
-`config.json` (created by `setup.sh` from `assets/config.example.json`):
+`config.json` is created by `setup.sh`. You can edit it to change defaults:
 
 ```json
 {
@@ -74,8 +134,7 @@ JSON to stdout:
   "output_dir": "output",
   "providers": {
     "openrouter": {
-      "default_model": "openai/gpt-image-1",
-      "max_tokens": 4096
+      "default_model": "openai/gpt-image-1"
     },
     "kie": {
       "default_model": "google-4o-image",
@@ -86,15 +145,28 @@ JSON to stdout:
 }
 ```
 
-Environment variables override config values:
-- `IMAGE_DEFAULT_PROVIDER` — override default provider
-- `IMAGE_OUTPUT_DIR` — override output directory
+Environment variables take priority over `config.json`:
+
+| Variable | Description |
+|----------|-------------|
+| `OPENROUTER_API_KEY` | OpenRouter API key |
+| `KIE_API_KEY` | Kie.ai API key |
+| `IMAGE_DEFAULT_PROVIDER` | Override default provider (`openrouter` or `kie`) |
+| `IMAGE_OUTPUT_DIR` | Override output directory |
+
+---
 
 ## Diagnostics
+
+If something isn't working, run:
 
 ```bash
 bash check.sh
 ```
+
+This checks Python version, dependencies, API key presence, and network connectivity.
+
+---
 
 ## Project Structure
 
@@ -113,7 +185,7 @@ bash check.sh
 │       ├── __init__.py
 │       ├── base_provider.py    # Abstract base class
 │       ├── openrouter_provider.py
-│       └── kie_provider.py     # Stub with TODOs
+│       └── kie_provider.py
 └── output/                     # Generated images (gitignored)
 ```
 

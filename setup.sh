@@ -4,7 +4,8 @@ set -euo pipefail
 SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
 VENV_DIR="$SKILL_DIR/.venv"
 
-echo "=== SMTools Image Generation Skill Setup ==="
+SKILL_VERSION="$(cat "$SKILL_DIR/VERSION" 2>/dev/null || echo "unknown")"
+echo "=== SMTools Image Generation Skill Setup (v$SKILL_VERSION) ==="
 echo ""
 
 # Check Python 3
@@ -59,7 +60,7 @@ fi
 mkdir -p "$SKILL_DIR/output"
 
 echo ""
-echo "=== Setup complete ==="
+echo "=== Setup complete (v$SKILL_VERSION) ==="
 echo ""
 echo "Next steps:"
 echo "  1. Edit .env and add your API key(s)"

@@ -1,3 +1,4 @@
+import json
 import time
 from datetime import datetime
 from pathlib import Path
@@ -7,25 +8,22 @@ import requests
 from providers.base_provider import BaseImageProvider
 from config_manager import get_api_key, get_output_dir
 
-# TODO: Replace with actual Kie.ai API endpoints once documentation is available
-# See https://docs.kie.ai/ for API reference
-TASK_SUBMIT_URL = "https://api.kie.ai/v1/tasks"  # TODO: verify endpoint
-TASK_STATUS_URL = "https://api.kie.ai/v1/tasks/{task_id}"  # TODO: verify endpoint
-
-DEFAULT_MODELS = [
-    "flux-ai",
-    "midjourney",
-    "google-4o-image",
-    "ghibli-ai",
-]
-
-# TODO: Map model names to Kie.ai API identifiers
-MODEL_MAP = {
-    "flux-ai": "flux-ai",  # TODO: verify API identifier
-    "midjourney": "midjourney",  # TODO: verify API identifier
-    "google-4o-image": "google-4o-image",  # TODO: verify API identifier
-    "ghibli-ai": "ghibli-ai",  # TODO: verify API identifier
+# Per-model submit endpoints
+MODEL_SUBMIT_URLS = {
+    "google-4o-image": "https://api.kie.ai/api/v1/gpt4o-image/generate",
+    "flux-ai":         "https://api.kie.ai/api/v1/flux/kontext/generate",
+    "midjourney":      "https://api.kie.ai/api/v1/midjourney/imagine",
+    "ghibli-ai":       "https://api.kie.ai/api/v1/gpt4o-image/generate",  # ghibli via 4o prompt
 }
+
+# Per-model poll endpoints; fallback to generic
+MODEL_POLL_URLS = {
+    "google-4o-image": "https://api.kie.ai/api/v1/gpt4o-image/record-info",
+    "ghibli-ai":       "https://api.kie.ai/api/v1/gpt4o-image/record-info",
+}
+GENERIC_POLL_URL = "https://api.kie.ai/api/v1/jobs/recordInfo"
+
+DEFAULT_MODELS = list(MODEL_SUBMIT_URLS.keys())
 
 
 class KieProvider(BaseImageProvider):
@@ -34,9 +32,7 @@ class KieProvider(BaseImageProvider):
     def __init__(self, config: dict):
         self.config = config
         self.provider_config = config.get("providers", {}).get("kie", {})
-        self.default_model = self.provider_config.get(
-            "default_model", "google-4o-image"
-        )
+        self.default_model = self.provider_config.get("default_model", "google-4o-image")
         self.poll_interval = self.provider_config.get("poll_interval", 5)
         self.max_wait = self.provider_config.get("max_wait", 300)
 
@@ -53,38 +49,31 @@ class KieProvider(BaseImageProvider):
     def generate(self, prompt: str, model: str = None, output_path: str = None) -> dict:
         api_key = get_api_key("kie")
         model = model or self.default_model
-        api_model = MODEL_MAP.get(model, model)
 
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
 
-        # Step 1: Submit task
-        # TODO: Adjust payload format per Kie.ai API docs
-        payload = {
-            "model": api_model,
-            "prompt": prompt,
-        }
+        submit_url = MODEL_SUBMIT_URLS.get(model, MODEL_SUBMIT_URLS["google-4o-image"])
+        payload = {"prompt": prompt, "size": "1:1"}
 
-        response = requests.post(
-            TASK_SUBMIT_URL, headers=headers, json=payload, timeout=30
-        )
+        response = requests.post(submit_url, headers=headers, json=payload, timeout=30)
         response.raise_for_status()
 
         task_data = response.json()
-        task_id = task_data.get("task_id")  # TODO: verify response field name
+        task_id = task_data.get("taskId") or task_data.get("data", {}).get("taskId")
 
         if not task_id:
             return {
                 "status": "error",
-                "error": "No task_id in response",
+                "error": f"No taskId in response: {json.dumps(task_data)[:300]}",
                 "provider": self.name,
                 "model": model,
             }
 
-        # Step 2: Poll for completion
-        result_url = self._poll_until_done(task_id, headers)
+        # Poll for completion
+        result_url = self._poll_until_done(task_id, model, headers)
 
         if result_url is None:
             return {
@@ -94,7 +83,7 @@ class KieProvider(BaseImageProvider):
                 "model": model,
             }
 
-        # Step 3: Download and save image
+        # Download and save
         if output_path is None:
             output_dir = get_output_dir(self.config)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -121,8 +110,8 @@ class KieProvider(BaseImageProvider):
             },
         }
 
-    def _poll_until_done(self, task_id: str, headers: dict) -> str:
-        """Poll task status with exponential backoff until done or timeout."""
+    def _poll_until_done(self, task_id: str, model: str, headers: dict) -> str | None:
+        poll_url = MODEL_POLL_URLS.get(model, GENERIC_POLL_URL)
         elapsed = 0
         interval = self.poll_interval
 
@@ -130,21 +119,29 @@ class KieProvider(BaseImageProvider):
             time.sleep(interval)
             elapsed += interval
 
-            url = TASK_STATUS_URL.format(task_id=task_id)
-            resp = requests.get(url, headers=headers, timeout=15)
+            resp = requests.get(
+                poll_url, headers=headers, params={"taskId": task_id}, timeout=15
+            )
             resp.raise_for_status()
-
             data = resp.json()
-            status = data.get("status")  # TODO: verify field name
 
-            if status == "completed":  # TODO: verify status value
-                # TODO: verify how result URL is returned
-                return data.get("result", {}).get("url")
-
-            if status in ("failed", "error"):  # TODO: verify error statuses
+            # GPT-4o style: successFlag 1=done, 2=failed
+            success_flag = data.get("successFlag")
+            if success_flag == 1:
+                urls = data.get("result_urls") or []
+                return urls[0] if urls else None
+            if success_flag == 2:
                 return None
 
-            # Exponential backoff, capped at 30s
+            # Generic task API: state field
+            state = data.get("state")
+            if state == "success":
+                result_json = data.get("resultJson", "{}")
+                result_urls = json.loads(result_json).get("resultUrls", [])
+                return result_urls[0] if result_urls else None
+            if state in ("fail",):
+                return None
+
             interval = min(interval * 1.5, 30)
 
         return None

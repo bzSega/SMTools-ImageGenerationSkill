@@ -11,6 +11,8 @@ metadata:
       env:
         - OPENROUTER_API_KEY
     primaryEnv: OPENROUTER_API_KEY
+    optionalEnv:
+      - KIE_API_KEY
 ---
 
 # Image Generation Skill

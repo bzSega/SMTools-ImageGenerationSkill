@@ -12,6 +12,7 @@ from config_manager import get_api_key, get_output_dir
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 DEFAULT_MODELS = [
+    "google/gemini-3.1-flash-image-preview",
     "openai/gpt-image-1",
     "google/imagen-4",
     "stabilityai/stable-diffusion-3",
@@ -25,7 +26,7 @@ class OpenRouterProvider(BaseImageProvider):
         self.config = config
         self.provider_config = config.get("providers", {}).get("openrouter", {})
         self.default_model = self.provider_config.get(
-            "default_model", "openai/gpt-image-1"
+            "default_model", "google/gemini-3.1-flash-image-preview"
         )
         self.max_tokens = self.provider_config.get("max_tokens", 4096)
 

@@ -6,7 +6,7 @@ OpenClaw skill for generating images from text prompts using AI models.
 
 | Provider | Type | Models | Required key |
 |----------|------|--------|--------------|
-| **OpenRouter** (default) | Synchronous | `openai/gpt-image-1`, `google/imagen-4`, `stabilityai/stable-diffusion-3` | `OPENROUTER_API_KEY` |
+| **OpenRouter** (default) | Synchronous | `google/gemini-3.1-flash-image-preview`, `google/imagen-4`, `stabilityai/stable-diffusion-3` | `OPENROUTER_API_KEY` |
 | **Kie.ai** | Async (task-based) | `flux-ai`, `midjourney`, `google-4o-image`, `ghibli-ai` | `KIE_API_KEY` |
 
 ---
@@ -117,7 +117,7 @@ python3 scripts/generate.py --provider openrouter --list-models
 {
   "status": "ok",
   "image_path": "/absolute/path/to/output/img_20260314_153000.png",
-  "model": "openai/gpt-image-1",
+  "model": "google/gemini-3.1-flash-image-preview",
   "provider": "openrouter"
 }
 ```
@@ -134,7 +134,7 @@ python3 scripts/generate.py --provider openrouter --list-models
   "output_dir": "output",
   "providers": {
     "openrouter": {
-      "default_model": "openai/gpt-image-1"
+      "default_model": "google/gemini-3.1-flash-image-preview"
     },
     "kie": {
       "default_model": "google-4o-image",

@@ -5,9 +5,19 @@ import argparse
 import json
 import sys
 import os
+import glob
 
 # Allow running as script without package install
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_scripts_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _scripts_dir)
+
+# Auto-inject venv site-packages so system python3 finds installed deps
+_venv_lib = os.path.join(os.path.dirname(_scripts_dir), ".venv", "lib")
+if os.path.isdir(_venv_lib):
+    for _sp in glob.glob(os.path.join(_venv_lib, "python3.*", "site-packages")):
+        if _sp not in sys.path:
+            sys.path.insert(1, _sp)
+            break
 
 from config_manager import load_config
 from providers import get_provider

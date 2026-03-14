@@ -7,16 +7,23 @@ import sys
 import os
 import glob
 
-# Allow running as script without package install
 _scripts_dir = os.path.dirname(os.path.abspath(__file__))
+_skill_root = os.path.dirname(_scripts_dir)
+
+# 1. scripts/ itself (for config_manager, providers)
 sys.path.insert(0, _scripts_dir)
 
-# Auto-inject venv site-packages so system python3 finds installed deps
-_venv_lib = os.path.join(os.path.dirname(_scripts_dir), ".venv", "lib")
+# 2. scripts/vendor/ — installed by setup.sh via pip --target (works with any python3)
+_vendor = os.path.join(_scripts_dir, "vendor")
+if os.path.isdir(_vendor) and _vendor not in sys.path:
+    sys.path.insert(1, _vendor)
+
+# 3. .venv site-packages — fallback for venv-based setups
+_venv_lib = os.path.join(_skill_root, ".venv", "lib")
 if os.path.isdir(_venv_lib):
     for _sp in glob.glob(os.path.join(_venv_lib, "python3.*", "site-packages")):
         if _sp not in sys.path:
-            sys.path.insert(1, _sp)
+            sys.path.insert(2, _sp)
             break
 
 from config_manager import load_config

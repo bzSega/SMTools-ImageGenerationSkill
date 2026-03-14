@@ -16,16 +16,18 @@ fi
 PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
 echo "Found Python $PYTHON_VERSION"
 
-# Create venv
+# Install dependencies into scripts/vendor/ (works with any system python3)
+VENDOR_DIR="$SKILL_DIR/scripts/vendor"
+echo "Installing dependencies into scripts/vendor/..."
+python3 -m pip install -q --target "$VENDOR_DIR" -r "$SKILL_DIR/requirements.txt"
+
+# Also install into venv as fallback
 if [ ! -d "$VENV_DIR" ]; then
     echo "Creating virtual environment..."
     python3 -m venv "$VENV_DIR"
 else
     echo "Virtual environment already exists."
 fi
-
-# Install dependencies
-echo "Installing dependencies..."
 "$VENV_DIR/bin/pip" install -q -r "$SKILL_DIR/requirements.txt"
 
 # Copy config template
@@ -61,5 +63,5 @@ echo "=== Setup complete ==="
 echo ""
 echo "Next steps:"
 echo "  1. Edit .env and add your API key(s)"
-echo "  2. Test:     bash $SKILL_DIR/scripts/run.sh --list-models"
-echo "  3. Generate: bash $SKILL_DIR/scripts/run.sh -p 'A cat in space'"
+echo "  2. Test:     python3 $SKILL_DIR/scripts/generate.py --list-models"
+echo "  3. Generate: python3 $SKILL_DIR/scripts/generate.py -p 'A cat in space'"

@@ -96,19 +96,19 @@ Once installed, the skill activates automatically in OpenClaw when you ask to ge
 
 ```bash
 # Default: OpenRouter + gpt-image-1
-python3 scripts/generate.py -p "A cat in space"
+bash scripts/run.sh -p "A cat in space"
 
 # Choose a specific model
-python3 scripts/generate.py -p "Cyberpunk cityscape" -m "google/imagen-4"
+bash scripts/run.sh -p "Cyberpunk cityscape" -m "google/imagen-4"
 
 # Use Kie.ai provider
-python3 scripts/generate.py -p "Studio Ghibli forest" --provider kie -m ghibli-ai
+bash scripts/run.sh -p "Studio Ghibli forest" --provider kie -m ghibli-ai
 
 # Save to a custom path
-python3 scripts/generate.py -p "A red fox" -o /tmp/fox.png
+bash scripts/run.sh -p "A red fox" -o /tmp/fox.png
 
 # List available models for a provider
-python3 scripts/generate.py --provider openrouter --list-models
+bash scripts/run.sh --provider openrouter --list-models
 ```
 
 ### Output

@@ -29,7 +29,7 @@ Activate when the user asks to:
 Run the generation script with an absolute path to avoid directory change prompts:
 
 ```bash
-python3 SKILL_DIR/scripts/generate.py --prompt "PROMPT" [OPTIONS]
+bash SKILL_DIR/scripts/run.sh --prompt "PROMPT" [OPTIONS]
 ```
 
 Replace `SKILL_DIR` with the absolute path to this skill's root directory.
@@ -65,22 +65,22 @@ After successful generation, show the user the image path and confirm the image 
 
 Basic generation:
 ```bash
-python3 SKILL_DIR/scripts/generate.py -p "A serene mountain lake at sunset"
+bash SKILL_DIR/scripts/run.sh -p "A serene mountain lake at sunset"
 ```
 
 Specific model:
 ```bash
-python3 SKILL_DIR/scripts/generate.py -p "Cyberpunk cityscape" -m "google/imagen-4"
+bash SKILL_DIR/scripts/run.sh -p "Cyberpunk cityscape" -m "google/imagen-4"
 ```
 
 Kie.ai provider:
 ```bash
-python3 SKILL_DIR/scripts/generate.py -p "Studio Ghibli forest" --provider kie -m ghibli-ai
+bash SKILL_DIR/scripts/run.sh -p "Studio Ghibli forest" --provider kie -m ghibli-ai
 ```
 
 Custom output path:
 ```bash
-python3 SKILL_DIR/scripts/generate.py -p "A red fox" -o /tmp/fox.png
+bash SKILL_DIR/scripts/run.sh -p "A red fox" -o /tmp/fox.png
 ```
 
 ## Error Handling

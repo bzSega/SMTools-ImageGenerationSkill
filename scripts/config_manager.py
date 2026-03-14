@@ -2,9 +2,20 @@ import json
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
-
 SKILL_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _load_env_file(env_path: Path) -> None:
+    """Parse a .env file and populate os.environ (stdlib only, no dotenv needed)."""
+    with open(env_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            os.environ.setdefault(key, value)
 
 
 def load_config(config_path: str = None) -> dict:
@@ -15,7 +26,7 @@ def load_config(config_path: str = None) -> dict:
     # Load .env if present
     env_path = SKILL_ROOT / ".env"
     if env_path.exists():
-        load_dotenv(env_path)
+        _load_env_file(env_path)
 
     # Load config.json
     if config_path is None:

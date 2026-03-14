@@ -8,22 +8,16 @@ import requests
 from providers.base_provider import BaseImageProvider
 from config_manager import get_api_key, get_output_dir
 
-# Per-model submit endpoints
-MODEL_SUBMIT_URLS = {
-    "google-4o-image": "https://api.kie.ai/api/v1/gpt4o-image/generate",
-    "flux-ai":         "https://api.kie.ai/api/v1/flux/kontext/generate",
-    "midjourney":      "https://api.kie.ai/api/v1/midjourney/imagine",
-    "ghibli-ai":       "https://api.kie.ai/api/v1/gpt4o-image/generate",  # ghibli via 4o prompt
-}
+CREATE_TASK_URL = "https://api.kie.ai/api/v1/jobs/createTask"
+RECORD_INFO_URL = "https://api.kie.ai/api/v1/jobs/recordInfo"
 
-# Per-model poll endpoints; fallback to generic
-MODEL_POLL_URLS = {
-    "google-4o-image": "https://api.kie.ai/api/v1/gpt4o-image/record-info",
-    "ghibli-ai":       "https://api.kie.ai/api/v1/gpt4o-image/record-info",
-}
-GENERIC_POLL_URL = "https://api.kie.ai/api/v1/jobs/recordInfo"
-
-DEFAULT_MODELS = list(MODEL_SUBMIT_URLS.keys())
+DEFAULT_MODELS = [
+    "nano-banana-2",
+    "flux-ai",
+    "midjourney",
+    "google-4o-image",
+    "ghibli-ai",
+]
 
 
 class KieProvider(BaseImageProvider):
@@ -55,10 +49,17 @@ class KieProvider(BaseImageProvider):
             "Content-Type": "application/json",
         }
 
-        submit_url = MODEL_SUBMIT_URLS.get(model, MODEL_SUBMIT_URLS["google-4o-image"])
-        payload = {"prompt": prompt, "size": "1:1"}
+        payload = {
+            "model": model,
+            "input": {
+                "prompt": prompt,
+                "aspect_ratio": "auto",
+                "resolution": "1K",
+                "output_format": "jpg",
+            },
+        }
 
-        response = requests.post(submit_url, headers=headers, json=payload, timeout=30)
+        response = requests.post(CREATE_TASK_URL, headers=headers, json=payload, timeout=30)
         response.raise_for_status()
 
         task_data = response.json()
@@ -72,8 +73,7 @@ class KieProvider(BaseImageProvider):
                 "model": model,
             }
 
-        # Poll for completion
-        result_url = self._poll_until_done(task_id, model, headers)
+        result_url = self._poll_until_done(task_id, headers)
 
         if result_url is None:
             return {
@@ -83,11 +83,10 @@ class KieProvider(BaseImageProvider):
                 "model": model,
             }
 
-        # Download and save
         if output_path is None:
             output_dir = get_output_dir(self.config)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_path = output_dir / f"img_{timestamp}.png"
+            output_path = output_dir / f"img_{timestamp}.jpg"
         else:
             output_path = Path(output_path)
 
@@ -110,8 +109,7 @@ class KieProvider(BaseImageProvider):
             },
         }
 
-    def _poll_until_done(self, task_id: str, model: str, headers: dict) -> str | None:
-        poll_url = MODEL_POLL_URLS.get(model, GENERIC_POLL_URL)
+    def _poll_until_done(self, task_id: str, headers: dict) -> str | None:
         elapsed = 0
         interval = self.poll_interval
 
@@ -120,26 +118,17 @@ class KieProvider(BaseImageProvider):
             elapsed += interval
 
             resp = requests.get(
-                poll_url, headers=headers, params={"taskId": task_id}, timeout=15
+                RECORD_INFO_URL, headers=headers, params={"taskId": task_id}, timeout=15
             )
             resp.raise_for_status()
             data = resp.json()
 
-            # GPT-4o style: successFlag 1=done, 2=failed
-            success_flag = data.get("successFlag")
-            if success_flag == 1:
-                urls = data.get("result_urls") or []
-                return urls[0] if urls else None
-            if success_flag == 2:
-                return None
-
-            # Generic task API: state field
             state = data.get("state")
             if state == "success":
                 result_json = data.get("resultJson", "{}")
                 result_urls = json.loads(result_json).get("resultUrls", [])
                 return result_urls[0] if result_urls else None
-            if state in ("fail",):
+            if state == "fail":
                 return None
 
             interval = min(interval * 1.5, 30)

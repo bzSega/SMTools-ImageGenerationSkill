@@ -1,7 +1,7 @@
 ---
 name: smtools-image-generation
 description: >
-  Generate images from text prompts using AI models via OpenRouter or Kie.ai.
+  Generate images from text prompts using AI models via OpenRouter, Kie.ai, or YandexART.
   Use when the user asks to generate, create, draw, or illustrate an image.
 metadata:
   openclaw:

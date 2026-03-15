@@ -1,10 +1,12 @@
 from providers.base_provider import BaseImageProvider
 from providers.openrouter_provider import OpenRouterProvider
 from providers.kie_provider import KieProvider
+from providers.yandexart_provider import YandexArtProvider
 
 PROVIDERS = {
     "openrouter": OpenRouterProvider,
     "kie": KieProvider,
+    "yandexart": YandexArtProvider,
 }
 
 

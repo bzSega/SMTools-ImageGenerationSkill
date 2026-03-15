@@ -66,6 +66,7 @@ def get_api_key(provider_name: str) -> str:
     env_map = {
         "openrouter": "OPENROUTER_API_KEY",
         "kie": "KIE_API_KEY",
+        "yandexart": "YANDEX_IAM_TOKEN",
     }
     env_var = env_map.get(provider_name)
     if env_var is None:

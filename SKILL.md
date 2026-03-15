@@ -42,7 +42,7 @@ Replace `SKILL_DIR` with the absolute path to this skill's root directory.
 | Flag | Description |
 |------|-------------|
 | `-p, --prompt` | Text prompt (required) |
-| `--provider` | `openrouter` (default) or `kie` |
+| `--provider` | `openrouter` (default), `kie`, or `yandexart` |
 | `-m, --model` | Model name (provider-specific) |
 | `-i, --input` | Input image for editing (path or URL) |
 | `-o, --output` | Output file path |
@@ -79,6 +79,7 @@ The editing prompt should describe **what to change**, e.g. "Add sunglasses", "M
 
 - **OpenRouter** (default): Fast, synchronous. Models: `google/gemini-3.1-flash-image-preview`, `openai/gpt-image-1`, `google/imagen-4`, `stabilityai/stable-diffusion-3`. Requires `OPENROUTER_API_KEY`.
 - **Kie.ai**: Async task-based. Models: `nano-banana-2`, `flux-ai`, `midjourney`, `google-4o-image`, `ghibli-ai`. Requires `KIE_API_KEY`. Use when the user explicitly requests Kie.ai or a Kie-specific model.
+- **YandexART**: Async task-based. Models: `yandex-art/latest`. Requires `YANDEX_IAM_TOKEN` and `YANDEX_FOLDER_ID`. Use when the user explicitly requests YandexART or Yandex.
 
 ## Examples
 

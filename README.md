@@ -21,6 +21,14 @@ clawhub install smtools-image-generation
 
 That's it. OpenClaw will pick up the skill automatically.
 
+**Updating:**
+
+```bash
+clawhub update smtools-image-generation --force
+```
+
+> Use `--force` to ensure all files are overwritten. Without it some files may not be updated.
+
 ### Option B — manually from GitHub
 
 **Step 1.** Clone the repository:

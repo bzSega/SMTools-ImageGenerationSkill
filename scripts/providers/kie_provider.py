@@ -40,7 +40,7 @@ class KieProvider(BaseImageProvider):
     def list_models(self) -> list:
         return DEFAULT_MODELS
 
-    def generate(self, prompt: str, model: str = None, output_path: str = None) -> dict:
+    def generate(self, prompt: str, model: str = None, output_path: str = None, input_image: str = None) -> dict:
         api_key = get_api_key("kie")
         model = model or self.default_model
 
@@ -49,14 +49,20 @@ class KieProvider(BaseImageProvider):
             "Content-Type": "application/json",
         }
 
+        input_block = {
+            "prompt": prompt,
+            "aspect_ratio": "auto",
+            "resolution": "1K",
+            "output_format": "jpg",
+        }
+
+        # Add input image for editing (Kie expects URLs)
+        if input_image:
+            input_block["image_input"] = [input_image]
+
         payload = {
             "model": model,
-            "input": {
-                "prompt": prompt,
-                "aspect_ratio": "auto",
-                "resolution": "1K",
-                "output_format": "jpg",
-            },
+            "input": input_block,
         }
 
         response = requests.post(CREATE_TASK_URL, headers=headers, json=payload, timeout=30)

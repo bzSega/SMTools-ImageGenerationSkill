@@ -27,6 +27,10 @@ def main():
     parser.add_argument("-m", "--model", type=str, default=None, help="Model name")
     parser.add_argument("-o", "--output", type=str, default=None, help="Output file path")
     parser.add_argument(
+        "-i", "--input", type=str, default=None,
+        help="Input image path for editing (optional)"
+    )
+    parser.add_argument(
         "-c", "--config", type=str, default=None, help="Path to config.json"
     )
     parser.add_argument(
@@ -90,7 +94,8 @@ def main():
 
     try:
         result = provider.generate(
-            prompt=args.prompt, model=args.model, output_path=args.output
+            prompt=args.prompt, model=args.model, output_path=args.output,
+            input_image=args.input
         )
     except Exception as e:
         result = {

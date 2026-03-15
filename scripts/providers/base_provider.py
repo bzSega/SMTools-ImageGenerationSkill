@@ -7,8 +7,14 @@ class BaseImageProvider(ABC):
     name: str = "base"
 
     @abstractmethod
-    def generate(self, prompt: str, model: str = None, output_path: str = None) -> dict:
-        """Generate an image from a text prompt.
+    def generate(self, prompt: str, model: str = None, output_path: str = None, input_image: str = None) -> dict:
+        """Generate or edit an image from a text prompt.
+
+        Args:
+            prompt: text prompt
+            model: model identifier
+            output_path: where to save the result
+            input_image: path to input image for editing (optional)
 
         Returns dict with keys:
             status: "ok" | "error"

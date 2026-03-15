@@ -25,6 +25,7 @@ Activate when the user asks to:
 - Generate, create, draw, paint, illustrate, or render an image
 - Make a picture, artwork, photo, or illustration
 - Visualize something as an image
+- Edit, modify, or transform an existing image
 
 ## How to Use
 
@@ -43,6 +44,7 @@ Replace `SKILL_DIR` with the absolute path to this skill's root directory.
 | `-p, --prompt` | Text prompt (required) |
 | `--provider` | `openrouter` (default) or `kie` |
 | `-m, --model` | Model name (provider-specific) |
+| `-i, --input` | Input image for editing (path or URL) |
 | `-o, --output` | Output file path |
 | `-c, --config` | Path to config.json |
 | `--list-models` | List available models |
@@ -78,6 +80,11 @@ bash SKILL_DIR/scripts/run.sh -p "Cyberpunk cityscape" -m "google/imagen-4"
 Kie.ai provider:
 ```bash
 bash SKILL_DIR/scripts/run.sh -p "Studio Ghibli forest" --provider kie -m ghibli-ai
+```
+
+Edit an existing image:
+```bash
+bash SKILL_DIR/scripts/run.sh -p "Add a rainbow to the sky" -i /path/to/photo.png
 ```
 
 Custom output path:

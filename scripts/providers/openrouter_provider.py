@@ -40,7 +40,7 @@ class OpenRouterProvider(BaseImageProvider):
     def list_models(self) -> list:
         return DEFAULT_MODELS
 
-    def generate(self, prompt: str, model: str = None, output_path: str = None) -> dict:
+    def generate(self, prompt: str, model: str = None, output_path: str = None, input_image: str = None) -> dict:
         api_key = get_api_key("openrouter")
         model = model or self.default_model
 
@@ -49,10 +49,20 @@ class OpenRouterProvider(BaseImageProvider):
             "Content-Type": "application/json",
         }
 
+        # Build message content: text-only or image+text for editing
+        if input_image:
+            image_b64 = self._encode_image(input_image)
+            content = [
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{image_b64}"}},
+                {"type": "text", "text": prompt},
+            ]
+        else:
+            content = prompt
+
         payload = {
             "model": model,
             "messages": [
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": content}
             ],
             "modalities": ["image", "text"],
             "max_tokens": self.max_tokens,
@@ -96,6 +106,12 @@ class OpenRouterProvider(BaseImageProvider):
                 "usage": data.get("usage", {}),
             },
         }
+
+    @staticmethod
+    def _encode_image(path: str) -> str:
+        """Read an image file and return base64-encoded string."""
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
 
     def _extract_image(self, data: dict) -> str:
         """Extract base64 image data from OpenRouter response.

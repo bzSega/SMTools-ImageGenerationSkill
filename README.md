@@ -112,6 +112,9 @@ bash scripts/run.sh -p "Cyberpunk cityscape" -m "google/imagen-4"
 # Use Kie.ai provider
 bash scripts/run.sh -p "Studio Ghibli forest" --provider kie -m ghibli-ai
 
+# Edit an existing image
+bash scripts/run.sh -p "Add a rainbow to the sky" -i output/img_20260315.png
+
 # Save to a custom path
 bash scripts/run.sh -p "A red fox" -o /tmp/fox.png
 

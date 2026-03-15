@@ -60,8 +60,8 @@ After successful generation, show the user the image path and confirm the image 
 
 ## Provider Selection
 
-- **OpenRouter** (default): Fast, synchronous. Models: `google/gemini-3.1-flash-image-preview`, `google/imagen-4`, `stabilityai/stable-diffusion-3`. Requires `OPENROUTER_API_KEY`.
-- **Kie.ai**: Async task-based. Models: `flux-ai`, `midjourney`, `google-4o-image`, `ghibli-ai`. Requires `KIE_API_KEY`. Use when the user explicitly requests Kie.ai or a Kie-specific model.
+- **OpenRouter** (default): Fast, synchronous. Models: `google/gemini-3.1-flash-image-preview`, `openai/gpt-image-1`, `google/imagen-4`, `stabilityai/stable-diffusion-3`. Requires `OPENROUTER_API_KEY`.
+- **Kie.ai**: Async task-based. Models: `nano-banana-2`, `flux-ai`, `midjourney`, `google-4o-image`, `ghibli-ai`. Requires `KIE_API_KEY`. Use when the user explicitly requests Kie.ai or a Kie-specific model.
 
 ## Examples
 

@@ -12,8 +12,8 @@ from config_manager import get_api_key, get_output_dir
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 DEFAULT_MODELS = [
-    "openai/gpt-image-1",
     "google/gemini-3.1-flash-image-preview",
+    "openai/gpt-image-1",
     "google/imagen-4",
     "stabilityai/stable-diffusion-3",
 ]
@@ -26,7 +26,7 @@ class OpenRouterProvider(BaseImageProvider):
         self.config = config
         self.provider_config = config.get("providers", {}).get("openrouter", {})
         self.default_model = self.provider_config.get(
-            "default_model", "openai/gpt-image-1"
+            "default_model", "google/gemini-3.1-flash-image-preview"
         )
         self.max_tokens = self.provider_config.get("max_tokens", 4096)
 
@@ -52,9 +52,9 @@ class OpenRouterProvider(BaseImageProvider):
         payload = {
             "model": model,
             "messages": [
-                {"role": "user", "content": f"Generate an image: {prompt}"}
+                {"role": "user", "content": prompt}
             ],
-            "modalities": ["text", "image"],
+            "modalities": ["image", "text"],
             "max_tokens": self.max_tokens,
         }
 
@@ -98,14 +98,30 @@ class OpenRouterProvider(BaseImageProvider):
         }
 
     def _extract_image(self, data: dict) -> str:
-        """Extract base64 image data from OpenRouter chat completion response."""
+        """Extract base64 image data from OpenRouter response.
+
+        Checks multiple locations where OpenRouter may place image data:
+        1. message.images[] — dedicated images array (documented format)
+        2. message.content (list) — structured content blocks
+        3. message.content (str) — inline base64 data URLs
+        """
         choices = data.get("choices", [])
         if not choices:
             return None
 
         message = choices[0].get("message", {})
-        content = message.get("content")
 
+        # 1. Check message.images[] — primary documented format
+        images = message.get("images", [])
+        for img in images:
+            if isinstance(img, dict) and img.get("type") == "image_url":
+                url = img.get("image_url", {}).get("url", "")
+                b64 = self._parse_data_url(url)
+                if b64:
+                    return b64
+
+        # 2. Check message.content
+        content = message.get("content")
         if content is None:
             return None
 
@@ -114,13 +130,11 @@ class OpenRouterProvider(BaseImageProvider):
             for block in content:
                 if not isinstance(block, dict):
                     continue
-                # type: image_url → {"image_url": {"url": "data:image/png;base64,..."}}
                 if block.get("type") == "image_url":
                     url = block.get("image_url", {}).get("url", "")
                     b64 = self._parse_data_url(url)
                     if b64:
                         return b64
-                # type: image → {"data": "base64..."} or {"url": "data:..."}
                 if block.get("type") == "image":
                     b64 = block.get("data") or block.get("base64")
                     if b64:
@@ -130,7 +144,7 @@ class OpenRouterProvider(BaseImageProvider):
                     if b64:
                         return b64
 
-        # String content — look for inline data URL or markdown image
+        # String content — inline data URL or markdown image
         if isinstance(content, str):
             b64 = self._parse_data_url(content)
             if b64:

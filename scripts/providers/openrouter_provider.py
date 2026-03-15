@@ -54,6 +54,7 @@ class OpenRouterProvider(BaseImageProvider):
             "messages": [
                 {"role": "user", "content": f"Generate an image: {prompt}"}
             ],
+            "modalities": ["text", "image"],
             "max_tokens": self.max_tokens,
         }
 

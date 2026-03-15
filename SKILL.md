@@ -60,6 +60,21 @@ The script outputs JSON to stdout:
 
 After successful generation, show the user the image path and confirm the image was created.
 
+## Image Editing
+
+When the user wants to **edit, modify, or transform an existing image**, use the `-i` flag to pass the input image:
+
+```bash
+bash SKILL_DIR/scripts/run.sh -p "EDITING INSTRUCTION" -i /path/to/source/image.png
+```
+
+**How to decide:**
+- User says "draw/generate/create X" → generate from scratch (no `-i`)
+- User says "edit/change/modify this image" or references an existing image file → use `-i` with the path to that image
+- User provides an image path and an editing instruction → use `-i`
+
+The editing prompt should describe **what to change**, e.g. "Add sunglasses", "Make the background blue", "Remove the text".
+
 ## Provider Selection
 
 - **OpenRouter** (default): Fast, synchronous. Models: `google/gemini-3.1-flash-image-preview`, `openai/gpt-image-1`, `google/imagen-4`, `stabilityai/stable-diffusion-3`. Requires `OPENROUTER_API_KEY`.
